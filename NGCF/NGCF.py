@@ -16,14 +16,15 @@ class NGCF(nn.Module):
         self.n_item = n_item
         self.device = args.device
         self.emb_size = args.embed_size
-        self.batch_size = args.batch_size
         self.node_dropout = args.node_dropout[0]
         self.mess_dropout = args.mess_dropout
         self.batch_size = args.batch_size
-
+        
+        #NOT normalizing parameter of L2-Norm
         self.norm_adj = norm_adj
-
+        #Except for the initial embedding layer, there are len(args.layer_size) layers and with embedding size of args.layer_size[i] in i-th layer 
         self.layers = eval(args.layer_size)
+        #weight decay parameter?
         self.decay = eval(args.regs)[0]
 
         """
@@ -50,6 +51,7 @@ class NGCF(nn.Module):
         })
 
         weight_dict = nn.ParameterDict()
+        #The first one is initial embedding layer
         layers = [self.emb_size] + self.layers
         for k in range(len(self.layers)):
             weight_dict.update({'W_gc_%d'%k: nn.Parameter(initializer(torch.empty(layers[k],
