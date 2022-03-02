@@ -20,13 +20,13 @@ class NGCF(nn.Module):
         self.mess_dropout = args.mess_dropout
         self.batch_size = args.batch_size
         
-        #
+        #normalized adjacent martix
         self.norm_adj = norm_adj
         
         #Except for the initial embedding layer, there are len(args.layer_size) layers and the output (embeddings) size of i-th layer is args.layer_size[i].
         self.layers = eval(args.layer_size)
         
-        #
+        #The penalty parameter of L2-Norm
         self.decay = eval(args.regs)[0]
 
         """
@@ -53,6 +53,7 @@ class NGCF(nn.Module):
         })
 
         weight_dict = nn.ParameterDict()
+        
         #The first one is initial embedding layer. Note that len(self.layers)+1=len(layers). 
         layers = [self.emb_size] + self.layers
         for k in range(len(self.layers)):
@@ -67,25 +68,31 @@ class NGCF(nn.Module):
         return embedding_dict, weight_dict
 
     def _convert_sp_mat_to_sp_tensor(self, X):
-        coo = X.tocoo()
+        coo = X.tocoo()#coordinate list of sparse matrix
         i = torch.LongTensor([coo.row, coo.col])
         v = torch.from_numpy(coo.data).float()
         return torch.sparse.FloatTensor(i, v, coo.shape)
 
     def sparse_dropout(self, x, rate, noise_shape):
+
         random_tensor = 1 - rate
         random_tensor += torch.rand(noise_shape).to(x.device)
         dropout_mask = torch.floor(random_tensor).type(torch.bool)
         i = x._indices()
         v = x._values()
-
+        
+        
+        #i has the format of [row1,row2,......]
+        #v has the format of [col1,col2,......]
         i = i[:, dropout_mask]
         v = v[dropout_mask]
 
         out = torch.sparse.FloatTensor(i, v, x.shape).to(x.device)
+        #why there need a reweight?
         return out * (1. / (1 - rate))
 
     def create_bpr_loss(self, users, pos_items, neg_items):
+        #take element-wise product first and sum the columns->this is the inner product 
         pos_scores = torch.sum(torch.mul(users, pos_items), axis=1)
         neg_scores = torch.sum(torch.mul(users, neg_items), axis=1)
 
@@ -93,10 +100,11 @@ class NGCF(nn.Module):
 
         mf_loss = -1 * torch.mean(maxi)
 
-        # cul regularizer
+        
         regularizer = (torch.norm(users) ** 2
                        + torch.norm(pos_items) ** 2
                        + torch.norm(neg_items) ** 2) / 2
+        #why there is a self.decay?
         emb_loss = self.decay * regularizer / self.batch_size
 
         return mf_loss + emb_loss, mf_loss, emb_loss
@@ -106,8 +114,9 @@ class NGCF(nn.Module):
 
     def forward(self, users, pos_items, neg_items, drop_flag=True):
 
-        A_hat = self.sparse_dropout(self.sparse_norm_adj,
-                                    self.node_dropout,
+        A_hat = self.sparse_dropout(self.sparse_norm_adj,#x
+                                    self.node_dropout,#rate
+                                    #noise_shape
                                     self.sparse_norm_adj._nnz()) if drop_flag else self.sparse_norm_adj
 
         ego_embeddings = torch.cat([self.embedding_dict['user_emb'],
