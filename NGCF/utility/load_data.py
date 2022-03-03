@@ -46,6 +46,10 @@ class Data(object):
                         continue
                     self.n_items = max(self.n_items, max(items))
                     self.n_test += len(items)
+        
+        
+        
+        #why +1?
         self.n_items += 1
         self.n_users += 1
 
@@ -94,7 +98,10 @@ class Data(object):
             sp.save_npz(self.path + '/s_norm_adj_mat.npz', norm_adj_mat)
             sp.save_npz(self.path + '/s_mean_adj_mat.npz', mean_adj_mat)
         return adj_mat, norm_adj_mat, mean_adj_mat
-
+    
+    
+    
+    # get normalized A
     def create_adj_mat(self):
         t1 = time()
         adj_mat = sp.dok_matrix((self.n_users + self.n_items, self.n_users + self.n_items), dtype=np.float32)
@@ -141,21 +148,25 @@ class Data(object):
             print('check normalized adjacency matrix whether equal to this laplacian matrix.')
             return temp
 
-        norm_adj_mat = mean_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
-        # norm_adj_mat = normalized_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
-        mean_adj_mat = mean_adj_single(adj_mat)
+        #norm_adj_mat = mean_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
+        norm_adj_mat = normalized_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
+        #mean_adj_mat = mean_adj_single(adj_mat)
 
         print('already normalize adjacency matrix', time() - t2)
         return adj_mat.tocsr(), norm_adj_mat.tocsr(), mean_adj_mat.tocsr()
-
+    
+    
+    
+    #for each user, sample 100 negative items
     def negative_pool(self):
         t1 = time()
         for u in self.train_items.keys():
             neg_items = list(set(range(self.n_items)) - set(self.train_items[u]))
-            pools = [rd.choice(neg_items) for _ in range(100)]
+            pools = [rd.choice(neg_items) for _ in range(100)]#choose 100 negative items randomly
             self.neg_pools[u] = pools
         print('refresh negative pools', time() - t1)
 
+    #sample batch_size users first then sample one positive item and one negative item for each user.
     def sample(self):
         if self.batch_size <= self.n_users:
             users = rd.sample(self.exist_users, self.batch_size)
@@ -257,8 +268,8 @@ class Data(object):
         split_state = []
         for idx, n_iids in enumerate(sorted(user_n_iid)):
             temp += user_n_iid[n_iids]
-            n_rates += n_iids * len(user_n_iid[n_iids])
-            n_count -= n_iids * len(user_n_iid[n_iids])
+            n_rates += n_iids * len(user_n_iid[n_iids])#?
+            n_count -= n_iids * len(user_n_iid[n_iids])#?
 
             if n_rates >= count * 0.25 * (self.n_train + self.n_test):
                 split_uids.append(temp)
