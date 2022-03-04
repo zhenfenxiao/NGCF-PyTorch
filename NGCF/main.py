@@ -41,7 +41,9 @@ if __name__ == '__main__':
     loss_loger, pre_loger, rec_loger, ndcg_loger, hit_loger = [], [], [], [], []
     for epoch in range(args.epoch):
         t1 = time()
+        #total loss, pair-wise loss, L2-Noem loss
         loss, mf_loss, emb_loss = 0., 0., 0.
+        
         n_batch = data_generator.n_train // args.batch_size + 1
 
         for idx in range(n_batch):
