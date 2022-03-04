@@ -17,7 +17,7 @@ def parse_args():
                         help='Project path.')
 
     parser.add_argument('--dataset', nargs='?', default='gowalla',
-                        help='Choose a dataset from {gowalla, yelp2018, amazon-book}')
+                        help='Choose a dataset from {gowalla, yelp2018, amazon-book,hm}')
     parser.add_argument('--pretrain', type=int, default=0,
                         help='0: No pretrain, -1: Pretrain with the learned embeddings, 1:Pretrain with stored models.')
     parser.add_argument('--verbose', type=int, default=1,
