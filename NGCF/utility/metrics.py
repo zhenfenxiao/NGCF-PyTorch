@@ -13,6 +13,8 @@ def precision_at_k(r, k):
         Precision @ k
     Raises:
         ValueError: len(r) must be >= k
+    Input:
+        What is r? Given a recommendation list, for each item in the list, if the item is relevent set the position to 1 otherwise 0.
     """
     assert k >= 1
     r = np.asarray(r)[:k]
@@ -24,7 +26,10 @@ def average_precision(r,cut):
     Relevance is binary (nonzero is relevant).
     Returns:
         Average precision
+    Input:
+        What is r? Given a recommendation list, for each item in the list, if the item is relevent set the position to 1 otherwise 0.
     """
+    
     r = np.asarray(r)
     out = [precision_at_k(r, k + 1) for k in range(cut) if r[k]]
     if not out:
@@ -68,7 +73,13 @@ def ndcg_at_k(r, k, ground_truth, method=1):
 
         Low but correct defination
     """
+    
+    
+    
+    #If the relevance is binary, GT={0,1}?
+    #I think it should be GT=sort(groud_truth)
     GT = set(ground_truth)
+    
     if len(GT) > k :
         sent_list = [1.0] * k
     else:
