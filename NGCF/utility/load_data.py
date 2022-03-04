@@ -150,7 +150,7 @@ class Data(object):
 
         #norm_adj_mat = mean_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
         norm_adj_mat = normalized_adj_single(adj_mat + sp.eye(adj_mat.shape[0]))
-        #mean_adj_mat = mean_adj_single(adj_mat)
+        mean_adj_mat = mean_adj_single(adj_mat)
 
         print('already normalize adjacency matrix', time() - t2)
         return adj_mat.tocsr(), norm_adj_mat.tocsr(), mean_adj_mat.tocsr()
