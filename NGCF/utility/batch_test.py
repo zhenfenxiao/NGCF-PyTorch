@@ -35,7 +35,7 @@ def ranklist_by_heapq(user_pos_test, test_items, rating, Ks):
             r.append(1)
         else:
             r.append(0)
-    auc = 0.
+    auc = get_auc(item_score, user_pos_test)
     return r, auc
 
 def get_auc(item_score, user_pos_test):
@@ -191,3 +191,46 @@ def test(model, users_to_test, drop_flag=False, batch_test_flag=False):
     assert count == n_test_users
     pool.close()
     return result
+def predict(model, users_to_test,k):
+    
+    pool = multiprocessing.Pool(cores)
+    u_batch_size = BATCH_SIZE * 2
+    i_batch_size = BATCH_SIZE
+
+    test_users = users_to_test
+    n_test_users = len(test_users)
+    n_user_batchs = n_test_users // u_batch_size + 1
+
+    count = 0
+    dic={}
+    for u_batch_id in range(n_user_batchs):
+        start = u_batch_id * u_batch_size
+        end = (u_batch_id + 1) * u_batch_size
+
+        user_batch = test_users[start: end]
+        # all-item test
+        item_batch = range(ITEM_NUM)
+        u_g_embeddings, pos_i_g_embeddings, _ = model(user_batch,
+                                                              item_batch,
+                                                              [],
+                                                              drop_flag=False)
+        rate_batch = model.rating(u_g_embeddings, pos_i_g_embeddings).detach().cpu()
+
+        
+        for ratings,user_id in enumerate(zip(rate_batch.numpy(), user_batch)):
+            items=list(u[0])
+            items.sort(reverse=True)
+            dic[u[1]]=items[:k]
+        print('batch %d'%u_bacth_id, " done\n")
+    np.save('result.npy',dic)
+            
+           
+        
+        
+
+
+
+
+ 
+  
+    
