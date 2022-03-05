@@ -76,7 +76,7 @@ if __name__ == '__main__':
         ret = test(model, users_to_test, drop_flag=False)
 
         t3 = time()
-
+        predict(model,users_to_test,5)
         loss_loger.append(loss)
         rec_loger.append(ret['recall'])
         pre_loger.append(ret['precision'])
